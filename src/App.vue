@@ -1,18 +1,20 @@
 <template>
-  <div
-    class="drop-zone"
-    @drop="onDrop($event)"
-    @dragenter.prevent
-    @dragover.prevent
-  >
+  <div class="drop-zone">
     <div
       v-for="item in getList()"
       :key="item.id"
-      class="drag-el"
-      draggable="true"
-      @dragstart="startDrag($event, item)"
+      @drop="onDrop($event, item)"
+      @dragenter.prevent
+      @dragover.prevent
+      @dragleave.prevent
     >
-      {{ item.title }}
+      <div
+        class="draggable"
+        draggable="true"
+        @dragstart="startDrag($event, item)"
+      >
+        {{ item.title }}
+      </div>
     </div>
   </div>
 </template>
@@ -25,33 +27,32 @@ export default {
       { id: 1, title: "Item B", order: 1 },
       { id: 2, title: "Item C", order: 2 },
       { id: 0, title: "Item A", order: 0 },
-    ]); // esto es el mockup de lo que viene de API call
+      { id: 4, title: "Item E", order: 4 },
+      { id: 3, title: "Item D", order: 3 },
+    ]);
 
-    const listItems = []; //esto deberia ir en data()
+    let dragStartIndex;
 
     const getList = () => {
       return items.value.sort((a, b) => a.order - b.order);
     };
 
     const startDrag = (event, item) => {
-      event.dataTransfer.dropEffect = "move";
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("itemID", item.id);
+      dragStartIndex = item.order;
     };
 
-    const onDrop = (event) => {
-      const itemId = event.dataTransfer.getData("itemID");
-      const item = items.value.find((item) => item.id == itemId);
+    const onDrop = (event, item) => {
       const dragEndIndex = item.order;
-      item.list = list;
+      swapItems(dragStartIndex, dragEndIndex);
     };
 
     const swapItems = (fromIndex, toIndex) => {
-      const itemOne = listItems[fromIndex].querySelector(".draggable");
-      const itemTwo = listItems[toIndex].querySelector(".draggable");
-
-      listItems[fromIndex].appendChild(itemTwo);
-      listItems[toIndex].appendChild(itemOne);
+      const itemOne = items.value.filter((i) => i.order == fromIndex);
+      const itemTwo = items.value.filter((i) => i.order == toIndex);
+      let itemOneOrder = itemOne[0].order;
+      let itemTwoOrder = itemTwo[0].order;
+      itemOne[0].order = itemTwoOrder;
+      itemTwo[0].order = itemOneOrder;
     };
 
     return {
@@ -68,17 +69,12 @@ export default {
   margin: 50px auto;
   background-color: #ecf0f1;
   padding: 10px 50px;
-  min-height: 10px;
 }
 
-.drag-el {
+.draggable {
   background-color: #3498db;
   color: white;
   padding: 5px;
   margin-bottom: 10px;
-}
-
-.drag-el:nth-last-of-type(1) {
-  margin-bottom: 0;
 }
 </style>
